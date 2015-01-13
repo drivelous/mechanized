@@ -27,24 +27,6 @@ def download(dir_link, filename):
 	f.write(urllib.urlopen(dir_link).read())
 	f.close()
 
-def download_all_images(url):
-	# open URL - check to see if http and www are in it - if not, append manually
-	html_content = urllib.urlopen(url).read()
-	html_soup = bs(html_content)
-	all_imgs = html_soup.findAll('img')
-
-	for img in all_imgs:
-		try:
-			dir_link = img['src']
-		except KeyError as e:
-			try:
-				dir_link = img['data-src']
-			except KeyError as e:
-				print "Located image. Unable to localize src. Passing..."
-		filename = get_filename(dir_link)
-		download(dir_link, filename)
-
-
 class Parse(object):
 
 	def __init__(self, url):
