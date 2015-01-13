@@ -16,6 +16,10 @@ from BeautifulSoup import BeautifulSoup as bs
 # -Parse all images on a soupified page, check if those filenames have been downloaded
 # -Visit next page
 
+def get_base_url(url):
+	pieces = urlparse(url)
+	return pieces.scheme + '://' + pieces.netloc
+
 def get_filename(img_url):
 	"""Takes image URL, parses, and eliminates excess filepath"""
 	parsed = urlparse(img_url)
@@ -30,6 +34,7 @@ def download(dir_link, filename):
 class Parse(object):
 
 	def __init__(self, url):
+		self.base_url = get_base_url(url)
 		self.soup = self.soupify(url)
 
 	def soupify(self, url):
@@ -47,21 +52,18 @@ class Parse(object):
 class Crawler(object):
 
 	def __init__(self, url):
-		self.base_url = self.get_base_url(url)
+		self.base_url = get_base_url(url)
 		self.q = deque([])
 		self.visited = set([])
 		self.images = set([])
-
-	def get_base_url(self, url):
-		pieces = urlparse(url)
-		return pieces.scheme + '://' + pieces.netloc
+		os.makedirs(self.base_url)
 
 	def add_or_discard_links(self, links):
 		for counter, link in enumerate(links, start=1):
 			print "Link #" + str(counter)
 			if not link.startswith('http'):
 				print "Appending base URL to link ", link
-				link = urljoin(self.base_url, link)
+				link = urljoin(self.base_url, link.replace(" ", ""))
 			if self.get_base_url(link) != self.base_url:
 				print "DISCARDED: ", link
 				print "Not in same domain\n"
@@ -84,14 +86,16 @@ class Crawler(object):
 			print "New link! Adding to queue...\n"
 
 	def download_or_discard_images(self, images):
+		"""Downloads list of BeautifulSoup images"""
 		
 		sources = ['src', 'data-src']
-
 		for img_idx, img in enumerate(images):
 			print "Image #" + str(img_idx + 1) + " of " + str(len(images))
 			for src_idx, src in enumerate(sources):
 				try:
 					dir_link = img[src]
+					if not dir_link.startswith('http'):
+						dir_link = urljoin(self.base_url, dir_link.replace(" ", ""))
 					filename = get_filename(dir_link)
 					download(dir_link, filename)
 					self.images.add(dir_link)
