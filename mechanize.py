@@ -56,7 +56,13 @@ class Crawler(object):
 		self.q = deque([])
 		self.visited = set([])
 		self.images = set([])
-		os.makedirs(self.base_url)
+		self.sources = ['src', 'data-src']
+
+		try:
+			self.directory = self.base_url.split('//')[1]
+			os.makedirs(self.directory)
+		except OSError:
+			print "Directory %s exists. Setting as directory..." % self.directory
 
 	def add_or_discard_links(self, links):
 		for counter, link in enumerate(links, start=1):
@@ -88,24 +94,24 @@ class Crawler(object):
 	def download_or_discard_images(self, images):
 		"""Downloads list of BeautifulSoup images"""
 		
-		sources = ['src', 'data-src']
 		for img_idx, img in enumerate(images):
 			print "Image #" + str(img_idx + 1) + " of " + str(len(images))
-			for src_idx, src in enumerate(sources):
+			for src_idx, src in enumerate(self.sources):
 				try:
 					dir_link = img[src]
 					if not dir_link.startswith('http'):
 						dir_link = urljoin(self.base_url, dir_link.replace(" ", ""))
 					filename = get_filename(dir_link)
-					download(dir_link, filename)
+					filepath = os.path.join(self.directory, filename)
+					download(dir_link, filepath)
 					self.images.add(dir_link)
 					print "Downloaded %s from %s\n" % (filename, dir_link)
 					# Does not attempt next source - goes to next image
 					break
 				except KeyError as e:
 					print "Does not have '%s' attribute" % src
-					if src_idx + 1 < len(sources):
-						print "Attempting '%s' attribute" % sources[src_idx + 1]
+					if src_idx + 1 < len(self.sources):
+						print "Attempting '%s' attribute" % self.sources[src_idx + 1]
 					else:
 						print "Sources exhausted. Skipping download.\n"
 
@@ -119,5 +125,19 @@ class Crawler(object):
 		self.download_or_discard_images(images)
 		#self.add_or_discard_links(links)
 
+def main():
+	if len(sys.argv) > 1:
+		url = sys.argv[1]
+	else:
+		try:
+			url = raw_input('Enter starting URL: ')
+		except (KeyboardInterrupt, EOFError):
+			print "You didn't enter a URL to crawl. Aborting..."
+			return
+	if not url.startswith('http://') and \
+		not url.startswith('ftp://'):
+		url = 'http://%s/' % url
 
+if __name__ == '__main__':
+	main()
 
