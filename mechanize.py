@@ -23,7 +23,7 @@ def get_base_url(url):
 def get_filename(img_url):
 	"""Takes image URL, parses, and eliminates excess filepath"""
 	parsed = urlparse(img_url)
-	return parsed.path.split('/')[-1]
+	return parsed.path.rstrip('/').split('/')[-1]
 
 def download(dir_link, filename):
 	"""Downloads image from dir_link giving it name filename"""
@@ -53,7 +53,7 @@ class Crawler(object):
 
 	def __init__(self, url):
 		self.base_url = get_base_url(url)
-		self.q = deque([])
+		self.q = deque([self.base_url])
 		self.visited = set([])
 		self.images = set([])
 		self.sources = ['src', 'data-src']
@@ -70,7 +70,7 @@ class Crawler(object):
 			if not link.startswith('http'):
 				print "Appending base URL to link ", link
 				link = urljoin(self.base_url, link.replace(" ", ""))
-			if self.get_base_url(link) != self.base_url:
+			if get_base_url(link) != self.base_url:
 				print "DISCARDED: ", link
 				print "Not in same domain\n"
 				continue
@@ -101,6 +101,9 @@ class Crawler(object):
 					dir_link = img[src]
 					if not dir_link.startswith('http'):
 						dir_link = urljoin(self.base_url, dir_link.replace(" ", ""))
+					if dir_link in self.images:
+						print "This image has already been downloaded. Skipping...\n"
+						break
 					filename = get_filename(dir_link)
 					filepath = os.path.join(self.directory, filename)
 					download(dir_link, filepath)
@@ -116,14 +119,30 @@ class Crawler(object):
 						print "Sources exhausted. Skipping download.\n"
 
 
-	def process(self):
-		#TODO: process starts on base_url -- should  be called by
-		#unwritten method go() on every page processed in self.q
-		page = Parse(self.base_url)
+	def process(self, url):
+		page = Parse(url)
 		images = page.return_images()
 		links = page.return_hrefs()
+		self.add_or_discard_links(links)
 		self.download_or_discard_images(images)
-		#self.add_or_discard_links(links)
+		# print "self.q: ", self.q
+		# self.add_or_discard_links(links)
+
+	def go(self):
+		while self.q:
+			url = self.q.popleft()
+			print "Currently on %s. Processing...\n\n" % url
+			self.process(url)
+			self.visited.add(url)
+
+			# page = Parse(self.q.popleft())
+			# images = page.return_images()
+			# self.download_or_discard_images(images)
+			# links = page.return_hrefs()
+			# self.add_or_discard_links(links)
+			# self.visited.add(page)
+
+		print "Crawling finished! Wrapping up..."
 
 def main():
 	if len(sys.argv) > 1:
@@ -137,6 +156,9 @@ def main():
 	if not url.startswith('http://') and \
 		not url.startswith('ftp://'):
 		url = 'http://%s/' % url
+
+	mechanized = Crawler(url)
+	mechanized.go()
 
 if __name__ == '__main__':
 	main()
