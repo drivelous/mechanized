@@ -12,7 +12,7 @@
 
 <p>Simply call the script with a URL</p>
 
-<pre><code>python mechanize.py <url here></code></pre>
+<pre><code>python mechanize.py http://drivelous.tumblr.com/</code></pre>
 
 <p>Mechanized downoads all images into a directory matching the name of the URL</p>
 
