@@ -14,8 +14,8 @@
 
 <pre><code>python mechanize.py http://drivelous.tumblr.com/</code></pre>
 
-<p>Mechanized downoads all images into a directory matching the name of the URL</p>
+<p>Mechanized downloads all images into a directory matching the name of the URL</p>
 
 <h3>Future of Development</p>
 
-<p>I probably won't be making any major improvements on this (EX: using a headless browser) but I am still curious about bugs that people come across as well as improvements that anyone makes. Feel free to send them to me at sean@drivelous.com.</p>
+<p>I probably won't be making any major improvements on this (EX: using a headless browser, add params for throttling connections) but I am still curious about bugs that people come across as well as improvements that anyone makes. Feel free to send them to me at sean@drivelous.com.</p>
