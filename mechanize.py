@@ -57,7 +57,7 @@ class Crawler(object):
 		self.q = deque([self.base_url])
 		self.visited = set([])
 		self.images = set([])
-		self.sources = ['src', 'data-src']
+		self.sources = ['src', 'data-src', 'ng-src']
 		self.ext = set(['.jpg', '.jpeg', '.gif', '.png', '.docx', '.doc',
 						'.pdf', '.bmp'])
 
@@ -150,6 +150,7 @@ class Crawler(object):
 		"""Processes all uncrawled links until empty"""
 		
 		retries = 0
+		max_retries = 5
 		while self.q:
 			url = self.q[0]
 			print "Visiting URL: ", url
@@ -158,7 +159,7 @@ class Crawler(object):
 				self.visited.add(self.q.popleft())
 			except IOError as errMsg:
 				retries += 1
-				if retries == 5:
+				if retries == max_retries:
 					print "Error threshold met. Quitting...\n"
 					return
 
@@ -180,11 +181,11 @@ def main():
 			return
 	if not url.startswith('http') and \
 		not url.startswith('ftp://'):
-		print "url: ", url
 		url = 'http://%s/' % url
 
 	mechanized = Crawler(url)
 	mechanized.go()
+
 
 if __name__ == '__main__':
 	main()
